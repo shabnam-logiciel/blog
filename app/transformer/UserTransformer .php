@@ -4,9 +4,9 @@ use User;
 use League\Fractal\TransformerAbstract;
 class UserTransformer extends TransformerAbstract
 {
-    // protected $availableIncludes = [
-    //     'comment'
-    // ];
+    protected $availableIncludes = [
+        'image','department'
+    ];
     public function transform($user)
     {
         return [
@@ -19,11 +19,18 @@ class UserTransformer extends TransformerAbstract
             'updated_at' => $user->updated_at->format('Y-m-d H:i:s')
          ];
     }
-    // public function includeComment($post)
-    // {
-    //     $comment = $post->comment;
-    //     if($comment){
-    //     return $this->collection($comment, new CommentTransformer);
-    //     }
-    // }
-}
+    public function includeImage($user)
+    {
+        $rule = $user->profile;
+        if($rule){
+        return $this->item($rule, new ProfileTransformer);
+        }
+    }
+    public function includeDepartment($user)
+    {
+        $rule = $user->department;
+        if($rule){
+        return $this->collection($rule, new DepartmentTransformer);
+        }
+    }
+ }

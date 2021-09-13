@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use transformer\PostTransformer;
 use transformer\CommentTransformer;
+use traits\SortTrait;
 
 
 
@@ -16,8 +17,9 @@ class PostcrudController extends \BaseController {
 	 *
 	 * @return Response
 	 */
+     protected $response;
 
-	protected $response;
+	  use SortTrait;
 
     public function __construct(Larasponse $response)
     {
@@ -38,6 +40,7 @@ class PostcrudController extends \BaseController {
 		$limit =  Request::get('limit');  
 		$user_id = Request::get('user_id');
 		$username = Request::get('username');
+		
 		if(!$limit){
 			$limit = 10;
 		 }
@@ -55,12 +58,13 @@ class PostcrudController extends \BaseController {
 		 return Response::json($this->response->Collection($user, new PostTransformer));
 
 		}
-
-        $add = Post::where('title','LIKE',"%$title%")->paginate($limit);
+       
+        $rule = Post::where('title','LIKE',"%$title%")->paginate($limit);
+		$rule = $this->sortabletrait($rule,$limit);
 		// $post=($limit==0) ? "10":"$limit";
 	
 		// $data = Post::paginate($limit) ;                                                            
-        return Response::json($this->response->paginatedCollection($add, new PostTransformer));
+        return Response::json($this->response->paginatedCollection($rule, new PostTransformer));
 	    // return Response::json($data);
 	
  
@@ -129,25 +133,7 @@ class PostcrudController extends \BaseController {
 			return Response::json([
 				"message" => "Record Not Found "
 			  ], 404 );
-		
-
-
-    }
-
-
-
-	/**
-	 * Show the form for editing the specified resource.
-	 *
-	 * @param  int  $id
-	 * @return Response
-	 */
-	public function edit()
-	{
-		
 	}
-
-
 	/**
 	 * Update the specified resource in storage.
 	 *
@@ -168,9 +154,6 @@ class PostcrudController extends \BaseController {
               412
           );
         }
-
-		
-
 		$add=Post::find($id);
    
 		$message=array(

@@ -1,11 +1,15 @@
 <?php
-
 use Illuminate\Support\Facades\Auth;
 use LucaDegasperi\OAuth2Server\Authorizer;
 use Sorskod\Larasponse\Larasponse;
 use User;
+use Department;
 use app\service\AuthService;
+use app\service\ImageService;
 use transformer\UserTransformer;
+use transformer\ProfileTransformer;
+use transformer\DepartmentTransformer;
+use DB;
 
 class UserController extends \BaseController {
 
@@ -16,22 +20,23 @@ class UserController extends \BaseController {
 	 */
      protected $authservice;
 	 protected $authorizer;
+	 protected $imageService;
 	 
 	 function __construct(Larasponse $response,
+    ImageService $imageService,
 	Authorizer $authorizer,
 	AuthService $authservice)
     {
         $this->response = $response;
 		$this->authorizer = $authorizer;
-		$this->authservice = $authservice;	
+		$this->imageService = $imageService;
+        $this->authservice = $authservice;	
         // The Fractal parseIncludes() is available to use here
 		if(Input::get('includes')){
             $this->response->parseIncludes(Input::get('includes'));
 			
         }
     }
-
-
 	public function signup()
 	{
 		$data = Request::all();
@@ -74,7 +79,6 @@ class UserController extends \BaseController {
 
 		
 	}
-
 	public function status()
     {
         $rules=[
@@ -102,28 +106,56 @@ class UserController extends \BaseController {
             return Response::json([
                 "message" => "please enter valid boolean number"
             ],404   );
-        
+    }
+	public function uploadImage() {
+	
+		$valid=[
+			        'image'=> 'required|image|mimes:jpeg,png,jpg|max:2048',
+			    ];
+			    $validation=Validator::make(Input::all(),$valid);
+			    if($validation->fails()){
+			        return Response::json($validation->errors(),412);
+			    }
 
+				
+		if (Input::hasFile('image')) {
+			$file            = Input::file('image');
+			$rule = $this->imageService->image($file);
+			// $message=array(
+			// 	array('messege'=>'image uploaded sucessfully'),
+			// 	array($rule)
+			// );
+			return Response::json($this->response->item($rule, new ProfileTransformer));		
+		}
+	
+	}
+
+	public function index()
+	{
+	  $add = User::all();
+	  return Response::json($this->response->collection($add, new UserTransformer));		
 	}
 	/**
 	 * Show the form for creating a new resource.
 	 *
 	 * @return Response
 	 */
-	public function create()
+	public function departmentindex()
 	{
-		//
+	     $dept = Department::all();
+		 return Response::json($this->response->collection($dept, new DepartmentTransformer));		
 	}
+	public function departmentstore()
+	{
+	   $user = User::find(Input::get('user_id'));
+	   $depIds = Input::get('department_id');
+	   $user->department()->sync((array)$depIds);
+	   return Response::json([
+			"message" => " inserted Succesfully",
+		   ],200   );
+    }
 
-
-	/**
-	 * Store a newly created resource in storage.
-	 *
-	 * @return Response
-	 */
 	
-
-
 	/**
 	 * Display the specified resource.
 	 *
