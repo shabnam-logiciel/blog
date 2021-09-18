@@ -9,7 +9,7 @@ class PostTransformer extends TransformerAbstract
 {
 
     protected $availableIncludes = [
-        'comments','users'
+        'comments','users','favouriteby'
     ];
 
 
@@ -21,6 +21,7 @@ class PostTransformer extends TransformerAbstract
             'user_id'      =>$add->user_id,
             'title'         => $add->title,
             'description'   => $add->description,
+            'is_favourite'  =>$add->is_favourite,
             'created_at'    =>$add->created_at->format('Y-m-d-H:i:s'),
             'updated_at'    =>$add->updated_at->format('Y-m-d-H:i:s')
 
@@ -28,6 +29,7 @@ class PostTransformer extends TransformerAbstract
         ];
     }
 
+    
     public function includeComments( $add)
     {
         $comment = $add->comments;
@@ -37,6 +39,7 @@ class PostTransformer extends TransformerAbstract
 
     }
     
+
     public function includeUsers( $add)
     {
         $user = $add->user;
@@ -45,5 +48,16 @@ class PostTransformer extends TransformerAbstract
          }
 
     }
+
+
+    public function includeFavouriteby( $add)
+    {
+        $rule = $add->user;
+         if($rule){
+        return $this->item($rule, new UserTransformer);
+         }
+
+    }
+
 
 }

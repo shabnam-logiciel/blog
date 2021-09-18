@@ -10,7 +10,7 @@ use traits\SortTrait;
 
 
 
-class PostcrudController extends \BaseController {
+class PostsController extends \BaseController {
 
 	/**
 	 * Display a listing of the resource.
@@ -34,94 +34,96 @@ class PostcrudController extends \BaseController {
 
 	public function index()
 	{
-		// $data = Post::paginate();
-	  
+	
+	    $posts = Post::query();
 		$title = Request::get('title');
 		$limit =  Request::get('limit');  
 		$user_id = Request::get('user_id');
 		$username = Request::get('username');
-		
+		$is_favourite = Request::get('is_favourite');
+
 		if(!$limit){
 			$limit = 10;
 		 }
         if($user_id){
-	    $data = Post::select("*")
-	    ->whereIn('user_id',$user_id)
-	    ->get();
-        return Response::json($this->response->Collection($data, new PostTransformer));
+			$posts->whereIn('user_id',$user_id);
+	
 		}
-       
-       else if($username){
-         $user = Post::leftJoin('users','posts.user_id', '=','users.id')
-		 ->whereIn('first_name',$username)
-		 ->get();
-		 return Response::json($this->response->Collection($user, new PostTransformer));
 
-		}
        
-        $rule = Post::where('title','LIKE',"%$title%")->paginate($limit);
-		$rule = $this->sortabletrait($rule,$limit);
-		// $post=($limit==0) ? "10":"$limit";
+    if($username){
+         $posts->leftJoin('users','posts.user_id', '=','users.id')
+		 ->whereIn('first_name',$username);
+		}
+
+
+       if($title){
+        $posts->where('title','LIKE',"%$title%");
 	
-		// $data = Post::paginate($limit) ;                                                            
-        return Response::json($this->response->paginatedCollection($rule, new PostTransformer));
+	   }
+
+
+
+	   if($is_favourite){
+        $posts->whereIn('is_favourite',$is_favourite);
+	   }
+
+	   
+	    $posts->select('posts.*');
+        $post=$posts->paginate($limit);
+		$posts = $this->sortabletrait($post,$limit);
+		// $data = Post::paginate($limit);                                                            
+        return Response::json($this->response->paginatedCollection($posts, new PostTransformer));
 	    // return Response::json($data);
-	
  
 	}
 
 
-	/**
-	 * Show the form for creating a new resource.
-	 *
-	 * @return Response
-	 */
-	public function create()
-	{
-		//
-	}
-	
-
-	/**
-	 * Store a newly created resource in storage.
-	 *
-	 * @return Response
-	 */
 	public function store()
     {
-        $id= Auth::id();
+        $id = Auth::id();
 		// dd($id);
 		
         $rules=[
             'title'=> 'required|unique:posts|max:20',
             'description'=> 'required|max:200'
         ];
-        $validation=Validator::make(Input::all(),$rules);
+
+        $validation = Validator::make(Input::all(),$rules);
         if($validation->fails()){
             return Response::json($validation->errors(),412);
         }
-        $add=new Post;
-        $message=array(
-            array('messege'=>'record inserted sucessfully'),
-            array($add)
-        );
+
+        $add = new Post;
+        $message = [
+            ['messege'=>'record inserted sucessfully'],
+           [$add]
+		];
 
 		$add->id = Request::get('id');
-		$add->user_id = Authorizer::getResourceOwnerId();
+		$add->user_id = Auth::Id();
         $add->title = Request::get('title');
         $add->description = Request::get('description');
         $add->save();
-
         return $message;
 		
 	}
-	
-	/**
-	 * Display the specified resource.
-	 *
-	 * @param  int  $id
-	 * @return Response
-	 */
+
+
+
+	public function addfavourite()
+	{
+		
+		$add = Post::Find(Input::get('post_id'));
+		$add->is_favourite = Input::get('is_favourite');
+		$add->marked_by = Auth::Id();
+		$add->save();
+         
+		return Response::json(["message => Favourite Successfully"],200);
+
+
+    }
+
 	public function show($id)
 	{
         $add = Post::find($id);
@@ -134,12 +136,9 @@ class PostcrudController extends \BaseController {
 				"message" => "Record Not Found "
 			  ], 404 );
 	}
-	/**
-	 * Update the specified resource in storage.
-	 *
-	 * @param  int  $id
-	 * @return Response
-	 */
+	
+
+
 	public function update($id)
 	{
           $valid = Validator::make(Input::all(),[
@@ -147,6 +146,7 @@ class PostcrudController extends \BaseController {
          'title' => 'required|max:20|unique:posts,title'. ($id ? ",$id" : ''),
          'description' => 'required|max:200'
      	 ]);
+
        if ($valid->fails())
        {
         return Response::json(
@@ -154,12 +154,13 @@ class PostcrudController extends \BaseController {
               412
           );
         }
+		
 		$add=Post::find($id);
    
-		$message=array(
-            array('messege'=>'record updated sucessfully'),
-            array($add)
-        );
+		$message=[
+           ['messege'=>'record updated sucessfully'],
+            [$add]
+		];
 
 		if($add){
 		$add->title = Request::get('title');
@@ -167,11 +168,11 @@ class PostcrudController extends \BaseController {
         $add->save();
 		return $message;
 		}
-		else{
+
 		  return Response::json([
 			"message" => "Records Not Found "
 		  ], 404 );
-		}
+		
 	}
 
 
@@ -191,11 +192,11 @@ class PostcrudController extends \BaseController {
 			"message" => "Records Deleted Successfully"
 		  ], 200 );
 		}
-		else{
+	
 		  return Response::json([
 			"message" => "Record Not Found "
 		  ], 404 );
-		}
+	
 		
 	}
 	

@@ -2,6 +2,7 @@
 namespace app\service;
 use Carbon\Carbon;
 use DB;
+
 class AuthService 
 {
     public function verify($token) 

@@ -10,12 +10,12 @@ trait SortTrait {
      * @param Request $request
      * @return $this|false|string
      */
-    public function sortabletrait($rule,$limit) {
+    public function sortabletrait($post,$limit) {
 
-        $sort_by =  \Input::get('sort_by')? : 'post.id';
+        $sort_by =  \Input::get('sort_by')? : 'posts.id';
     	$sort_order = \Input::get('sort_order') ? : 'desc';
-        $rule = Post::orderBy($sort_by,$sort_order)->paginate($limit);
-        return $rule;
+        $post = Post::orderBy($sort_by,$sort_order)->paginate($limit);
+        return $post;
     }
   
 }

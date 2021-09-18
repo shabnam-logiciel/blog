@@ -37,6 +37,9 @@ class UserController extends \BaseController {
 			
         }
     }
+
+
+
 	public function signup()
 	{
 		$data = Request::all();
@@ -44,6 +47,7 @@ class UserController extends \BaseController {
             'email'=> 'required|unique:users',
 			'password'=> 'required|'
         ];
+
         $validation=Validator::make(Input::all(),$rules);
         if($validation->fails()){
             return Response::json($validation->errors(),412);
@@ -61,6 +65,9 @@ class UserController extends \BaseController {
         ],200   );
     
  	}
+          
+
+
 	 public function login()
 	{
 		$user= Input::all();
@@ -70,53 +77,66 @@ class UserController extends \BaseController {
 		$token = $this->authorizer->issueAccessToken();
 		// dd($token);
 		$token = $this->authservice->verify($token);
-		return Response::json([
-			"message" => "Login Succesfully",
-			$token
- 		   ],200   );
-	   
-		
 
-		
+		return Response::json([
+		"message" => "Login Succesfully",
+		$token
+ 		],200   );
+	   
 	}
+
+
 	public function status()
     {
         $rules=[
             'active'=> 'required',
         ];
+
         $validation=Validator::make(Input::all(),$rules);
         if($validation->fails()){
+
             return Response::json($validation->errors(),412);
         }
+
         $status = Request::get('active');
         // $add=new User;
         // $add->is_active = Request::get('is_active');
         // $add->save();
+
+
         if($status==0){
             return Response::json([
                 "message" => "inactive"
             ],201   );
         }
+
+
         else if($status==1){
             return Response::json([
                 "message" => "active"
             ],201   );
         }
-     
+
+
             return Response::json([
-                "message" => "please enter valid boolean number"
+            "message" => "please enter valid boolean number"
             ],404   );
     }
+
+
+
 	public function uploadImage() {
 	
 		$valid=[
 			        'image'=> 'required|image|mimes:jpeg,png,jpg|max:2048',
 			    ];
+
 			    $validation=Validator::make(Input::all(),$valid);
 			    if($validation->fails()){
+
 			        return Response::json($validation->errors(),412);
 			    }
-
+				
 				
 		if (Input::hasFile('image')) {
 			$file            = Input::file('image');
@@ -127,29 +147,35 @@ class UserController extends \BaseController {
 			// );
 			return Response::json($this->response->item($rule, new ProfileTransformer));		
 		}
-	
 	}
+
 
 	public function index()
 	{
 	  $add = User::all();
+
 	  return Response::json($this->response->collection($add, new UserTransformer));		
 	}
-	/**
-	 * Show the form for creating a new resource.
-	 *
-	 * @return Response
-	 */
+
+
+
 	public function departmentindex()
 	{
 	     $dept = Department::all();
+
 		 return Response::json($this->response->collection($dept, new DepartmentTransformer));		
 	}
+
+
+
+
 	public function departmentstore()
 	{
 	   $user = User::find(Input::get('user_id'));
-	   $depIds = Input::get('department_id');
-	   $user->department()->sync((array)$depIds);
+	   $deptIds = Input::get('department_id');
+	   $user->department()->sync((array)$deptIds);
+
+
 	   return Response::json([
 			"message" => " inserted Succesfully",
 		   ],200   );

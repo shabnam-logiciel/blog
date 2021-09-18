@@ -19,11 +19,13 @@ Route::get('/', function()
  
                     // post  //
 Route::group(['before' => 'oauth'], function(){        
-Route::get('/post','PostcrudController@index');
-Route::post('/post','PostcrudController@store');
-Route::get('/post/{id}','PostcrudController@show');
-Route::put('/post/{id}','PostcrudController@update');
-Route::delete('/post/{id}','PostcrudController@destroy');
+Route::get('/post','PostsController@index');
+Route::post('/post','PostsController@store');
+Route::get('/post/{id}','PostsController@show');
+Route::put('/post/{id}','PostsController@update');
+Route::delete('/post/{id}','PostsController@destroy');
+Route::post('/postfavourite','PostsController@addfavourite');
+
 });
 
 // Route::get('/postsearch/{title}','PostcrudController@search');
@@ -31,10 +33,10 @@ Route::delete('/post/{id}','PostcrudController@destroy');
 
                          // COMMENTS//
 Route::group(['before' => 'oauth'], function(){                          
-Route::post('/comment','CommentController@commentstore');
-Route::get('/comment','CommentController@commentindex');
-Route::delete('/comment/{id}','CommentController@commentdestroy');
-Route::put('/comment/{id}','CommentController@commentupdate');
+Route::post('/comment','CommentController@store');
+Route::get('/comment','CommentController@index');
+Route::delete('/comment/{id}','CommentController@destroy');
+Route::put('/comment/{id}','CommentController@update');
 });
 
                           // User Signup    //
@@ -42,9 +44,13 @@ Route::post('/signup','UserController@signup');
 Route::post('/login','UserController@login');
 Route::post('/status','UserController@status');
 Route::get('/user','UserController@index');
+
+                        // image upload    //
 Route::group(['before' => 'oauth'], function(){    
 Route::post('/uploadimage','UserController@uploadimage');
 
 });
+
+                        // department   //
 Route::post('/department','UserController@departmentstore');
 Route::get('/department','UserController@departmentindex');

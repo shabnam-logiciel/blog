@@ -6,6 +6,8 @@ use transformer\CommentTransformer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Comment;
+
+  
 class CommentController extends \BaseController {
 
 	/**
@@ -25,43 +27,34 @@ class CommentController extends \BaseController {
             $this->response->parseIncludes(Input::get('includes'));
 			
         }
+
     }
 
-	public function commentindex()
+	
+	public function index()
 	{
         $post_id = Request::get('post_id');
 		$limit =  Request::get('limit');  
+
 		if(!$limit){
 			$limit = 10;
 		 }
+
         $comment = Comment::where('post_id','LIKE',"%$post_id%")->paginate($limit);
         return Response::json($this->response->paginatedCollection($comment, new CommentTransformer));		 
 		
  
 	}
-	/**
-	 * Show the form for creating a new resource.
-	 *
-	 * @return Response
-	 */
-	public function create()
-	{
-		//
-	}
-	/**
-	 * Store a newly created resource in storage.
-	 *
-	 * @return Response
-	 */
-	public function commentstore()
-	{
+	
 
-
+	public function store()
+	{
 		$validation = Validator::make(Input::all(),[
                                                                                                     
 			'post_id'=> 'required|integer',
             'comments'=> 'required|max:200'
 			 ]);
+
 		  if ($validation->fails())
 		  {
 		   return Response::json(
@@ -74,22 +67,28 @@ class CommentController extends \BaseController {
         $comment->user_id = Authorizer::getResourceOwnerId();
         $comment->post_id = Request::get('post_id');
         $comment->comments = Request::get('comments');
+
         if(input::get('parent_id')){
         $current = Comment::where('id', '=', input::get('parent_id'))->first();
+
         if($current && ($n = $current->parent) && ($n->parent) ) {
         return Response::json(["meesege"=>"record is invalid"],400);
         }
+
         $comment->parent_id = Request::get('parent_id');
         }
                     $comment->save();
-                    $messege=array(
-                        array('messege'=>'record inserted sucessfully'),
-                        array($comment)
-                    );
+                    $messege=[
+                        ['messege'=>'record inserted sucessfully'],
+                        [$comment]
+					];
                     return $messege;
 	} 
-	public function commentdestroy($id)
+
+
+	public function destroy($id)
 	{
+		
 		$comment=Comment::find($id);
 		if($comment){
         $comment->delete();
@@ -98,20 +97,22 @@ class CommentController extends \BaseController {
 			"message" => "Records Deleted Successfully"
 		  ], 200 );
 		}
-		else{
 		  return Response::json([
 			"message" => "Record Not Found "
 		  ], 404 );
-		}
+		
 		
 	}
-	public function commentupdate($id)
+
+
+	public function update($id)
 	{
           $valid = Validator::make(Input::all(),[
                                                                                                     
         //  'post_id' => 'required|max:20',
          'comments' => 'required|max:200'
      	 ]);
+
        if ($valid->fails())
        {
         return Response::json(
@@ -119,12 +120,13 @@ class CommentController extends \BaseController {
               412
           );
         }
+
 		$comment=Comment::find($id);
    
-		$message=array(
-            array('messege'=>'record updated sucessfully'),
-            array($comment)
-        );
+		$message=[
+          ['messege'=>'record updated sucessfully'],
+           [$comment]
+		];
 
 		if($comment){
 		// $comment->post_id = Request::get('post_id');
@@ -132,11 +134,10 @@ class CommentController extends \BaseController {
         $comment->save();
 		return $message;
 		}
-		else{
 		  return Response::json([
 			"message" => "Records Not Found "
 		  ], 404 );
-		}
+		
 	}
 
 	/**

@@ -2,11 +2,14 @@
 namespace transformer;
 use User;
 use League\Fractal\TransformerAbstract;
+
+
 class UserTransformer extends TransformerAbstract
 {
     protected $availableIncludes = [
         'image','department'
     ];
+
     public function transform($user)
     {
         return [
@@ -18,7 +21,10 @@ class UserTransformer extends TransformerAbstract
             'created_at' => $user->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $user->updated_at->format('Y-m-d H:i:s')
          ];
+        
     }
+
+
     public function includeImage($user)
     {
         $rule = $user->profile;
@@ -26,6 +32,8 @@ class UserTransformer extends TransformerAbstract
         return $this->item($rule, new ProfileTransformer);
         }
     }
+
+
     public function includeDepartment($user)
     {
         $rule = $user->department;

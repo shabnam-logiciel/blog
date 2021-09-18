@@ -3,6 +3,7 @@ class DepartmentTableSeeder extends Seeder {
 
 	public function run()
 	{
+
 		Department::truncate();
 		$departments = ['General Management', 
 		'business strategies', 
@@ -13,10 +14,17 @@ class DepartmentTableSeeder extends Seeder {
 		'Human Resource Department',
 		'Purchase Department'];
 
+
+
 		foreach ($departments as $key => $value) {
 			Department::create([
 				'name' => $value
 			]);
 		}
+
+
 	}
+
+
+	
 }
