@@ -35,6 +35,8 @@ class Post extends Eloquent implements UserInterface, RemindableInterface {
 	{
 	  return $this->belongsTo(User::class,'user_id','id');
 	}
+	
+	
 
 
 	

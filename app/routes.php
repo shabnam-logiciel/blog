@@ -27,6 +27,9 @@ Route::delete('/post/{id}','PostsController@destroy');
 Route::post('/postfavourite','PostsController@addfavourite');
 
 });
+Route::post('/import','PostsController@importdata');
+
+Route::get('/export','PostsController@exportdata');
 
 // Route::get('/postsearch/{title}','PostcrudController@search');
 

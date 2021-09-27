@@ -22,6 +22,7 @@ class PostTransformer extends TransformerAbstract
             'title'         => $add->title,
             'description'   => $add->description,
             'is_favourite'  =>$add->is_favourite,
+            'marked_by'     =>$add->marked_by,
             'created_at'    =>$add->created_at->format('Y-m-d-H:i:s'),
             'updated_at'    =>$add->updated_at->format('Y-m-d-H:i:s')
 

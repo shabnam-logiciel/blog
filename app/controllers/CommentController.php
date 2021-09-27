@@ -40,7 +40,8 @@ class CommentController extends \BaseController {
 			$limit = 10;
 		 }
 
-        $comment = Comment::where('post_id','LIKE',"%$post_id%")->paginate($limit);
+        // $comment = Comment::where('post_id','LIKE',"%$post_id%")->paginate($limit);
+		$comment = Comment::whereNull('parent_id')->paginate($limit);
         return Response::json($this->response->paginatedCollection($comment, new CommentTransformer));		 
 		
  
@@ -76,7 +77,7 @@ class CommentController extends \BaseController {
         }
 
         $comment->parent_id = Request::get('parent_id');
-        }
+	    }
                     $comment->save();
                     $messege=[
                         ['messege'=>'record inserted sucessfully'],

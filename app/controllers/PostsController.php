@@ -1,14 +1,13 @@
 <?php
 use Sorskod\Larasponse\Larasponse;
-use Post;
-use User;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
 use transformer\PostTransformer;
-use transformer\CommentTransformer;
+use transformer\PostExcelTransformer;
+// use Maatwebsite\Excel\Facades\Excel;
 use traits\SortTrait;
-
-
+use Excel;
+use DB;
+use imports\PostImport;
 
 class PostsController extends \BaseController {
 
@@ -49,35 +48,78 @@ class PostsController extends \BaseController {
 			$posts->whereIn('user_id',$user_id);
 	
 		}
-
        
-    if($username){
+        if($username){
          $posts->leftJoin('users','posts.user_id', '=','users.id')
-		 ->whereIn('first_name',$username);
+		 ->whereIn('first_name', $username);
 		}
 
-
        if($title){
-        $posts->where('title','LIKE',"%$title%");
+        $posts->where('title', 'LIKE', "%$title%");
 	
 	   }
 
-
-
 	   if($is_favourite){
-        $posts->whereIn('is_favourite',$is_favourite);
+        $posts->whereIn('is_favourite', $is_favourite);
 	   }
 
 	   
 	    $posts->select('posts.*');
         $post=$posts->paginate($limit);
-		$posts = $this->sortabletrait($post,$limit);
+		$posts = $this->sortabletrait($post, $limit);
 		// $data = Post::paginate($limit);                                                            
         return Response::json($this->response->paginatedCollection($posts, new PostTransformer));
 	    // return Response::json($data);
- 
+		
+	   
+    }
+
+	public function exportdata(){
+		   $data = Post::all();
+		  $post = $this->response->Collection($data, new PostExcelTransformer);
+
+
+		  Excel::create('data', function($excel) use($post)  {
+			$excel->sheet('sheet', function($sheet) use($post) {
+			$sheet->with($post['data']);
+			});
+		})->export('xls');
 	}
 
+
+
+	public function importdata()
+	{
+	$posts = Excel::load('data.xls', function ($reader) {
+		$reader->get(array('title', 'description')); 
+	    })->get();
+
+    foreach ($posts as $post) {
+    
+        $post = $post->all();
+		// dd($post);
+ 
+	
+	   $user = DB::table('users')->where('first_name', $post['username'])->get();
+	//    print_r($user[0]->id);
+	  
+	   $markedByuser = DB::table('users')->where('first_name', $post['marked_by'])->get();
+  
+		$data = [
+			'title'=> $post['title'],
+			'description' => $post['description'],
+			'user_id' => $user[0]->id, 
+			'marked_by' => $markedByuser[0]->id,
+			'is_favourite' => $post['is_favourite']
+		];
+
+		DB::table('posts')->insert($data);
+
+		}
+
+    }  
+
+	
 
 	public function store()
     {
@@ -100,40 +142,73 @@ class PostsController extends \BaseController {
            [$add]
 		];
 
-		$add->id = Request::get('id');
 		$add->user_id = Auth::Id();
         $add->title = Request::get('title');
         $add->description = Request::get('description');
         $add->save();
-        return $message;
+		return $message;
+       
 		
 	}
 
 
 
-	public function addfavourite()
-	{
+	// public function addfavourite()
+	// {
 		
-		$add = Post::Find(Input::get('post_id'));
-		$add->is_favourite = Input::get('is_favourite');
-		$add->marked_by = Auth::Id();
-		$add->save();
+	// 	$add = Post::Find(Input::get('post_id'));
+	// 	$add->is_favourite = Input::get('is_favourite');
+	// 	$add->marked_by = Auth::Id();
+	// 	$add->save();
          
-		return Response::json(["message => Favourite Successfully"],200);
+	// 	return Response::json(["message => Favourite Successfully"],200);
+	
 
+    // }
 
+	 public function addfavourite()
+   {
+	  $add = Post::Find(Input::get('post_id'));
+       if($add){
+        $fav = Input::get('is_favourite');
+        if($fav==0){
+            $add->is_favourite=$fav;
+			$add->marked_by = 0;
+            $add->save();
+            return Response::json([
+                "message" => "not a favourite post"
+            ],201   );
+        }
+        else if($fav==1){
+            $add->is_favourite=$fav;
+			$add->marked_by = Auth::Id();
+
+            $add->save();
+            return Response::json([
+                "message" => "favourite post"
+            ],201   );
+        }
+        else{
+            return Response::json([
+                "message" => "please enter valid boolean number"
+            ],404   );
+        }
+        }
     }
+
+
 
 	public function show($id)
 	{
         $add = Post::find($id);
-	    if($add){
+	    if($add)
+		{
 
          return $add;
 		}
 	
-			return Response::json([
-				"message" => "Record Not Found "
+		return Response::json([
+			"message" => "Record Not Found "
 			  ], 404 );
 	}
 	
@@ -147,13 +222,16 @@ class PostsController extends \BaseController {
          'description' => 'required|max:200'
      	 ]);
 
-       if ($valid->fails())
-       {
-        return Response::json(
-              ['error'=>$valid->errors()],
-              412
-          );
-        }
+        
+	    
+		if ($valid->fails())
+        {
+        
+		 return Response::json([
+			'error'=>$valid->errors()
+		 ], 421);
+
+	    }
 		
 		$add=Post::find($id);
    
@@ -176,12 +254,6 @@ class PostsController extends \BaseController {
 	}
 
 
-	/**
-	 * Remove the specified resource from storage.
-	 *
-	 * @param  int  $id
-	 * @return Response
-	 */
 	public function destroy($id)
 	{
 		$add=Post::find($id);
@@ -200,33 +272,6 @@ class PostsController extends \BaseController {
 		
 	}
 	
-	
-  
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
+
 	

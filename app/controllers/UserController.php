@@ -63,12 +63,11 @@ class UserController extends \BaseController {
         return Response::json([
          "message" => "SignUp Succesfully"
         ],200   );
-    
- 	}
+    }
           
 
 
-	 public function login()
+	public function login()
 	{
 		$user= Input::all();
 		$user = User::where('email', Input::get('username'))->first();
@@ -111,21 +110,25 @@ class UserController extends \BaseController {
         }
 
 
-        else if($status==1){
+        else if($status==1)
+		{
             return Response::json([
                 "message" => "active"
             ],201   );
         }
 
 
-            return Response::json([
+        return Response::json([
             "message" => "please enter valid boolean number"
-            ],404   );
+            ],404  
+	    );
+		
     }
 
 
 
-	public function uploadImage() {
+	public function uploadImage() 
+	{
 	
 		$valid=[
 			        'image'=> 'required|image|mimes:jpeg,png,jpg|max:2048',
@@ -148,7 +151,7 @@ class UserController extends \BaseController {
 			return Response::json($this->response->item($rule, new ProfileTransformer));		
 		}
 	}
-
+  
 
 	public function index()
 	{
